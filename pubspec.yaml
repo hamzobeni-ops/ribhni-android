@@ -1,20 +1,38 @@
-name: ribhni
-description: تطبيق ربحني للمكافآت - نسخة أولية تجريبية
-publish_to: "none"
-version: 0.1.0+1
+name: Build Ribhni APK
 
-environment:
-  sdk: ">=3.3.0 <4.0.0"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
 
-dependencies:
-  flutter:
-    sdk: flutter
-  cupertino_icons: ^1.0.8
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^4.0.0
+    steps:
+      - uses: actions/checkout@v4
 
-flutter:
-  uses-material-design: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Create Android project
+        run: flutter create --platforms=android --project-name ribhni --org com.ribhni.app app
+
+      - name: Copy app source
+        run: cp lib/main.dart app/lib/main.dart
+
+      - name: Build APK
+        working-directory: app
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ribhni-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
